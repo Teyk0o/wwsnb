@@ -3,7 +3,10 @@
   "version": "0.2.0",
   "type": "module",
   "description": "Retrieve functionality from Slippers for BBB.",
-  "repository": "https://github.com/Teyk0o/wwsnb",
+  "repository": "github:Teyk0o/wwsnb",
+  "bugs": {
+    "url": "https://github.com/Teyk0o/wwsnb/issues"
+    },
   "keywords": [
     "oclock",
     "school",
@@ -19,6 +22,7 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.14.0",
+    "@types/node": "^22.9.0",
     "eslint": "^9.14.0",
     "globals": "^15.12.0"
   }

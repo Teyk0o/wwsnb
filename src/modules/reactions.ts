@@ -1,6 +1,8 @@
+import { getActualUserName } from "../user/get";
+
 // Global variables for reactions system
 let messageReactions = new Map();
-let reactionChannel;
+let reactionChannel: BroadcastChannel;
 
 // Available reaction emojis
 const availableReactions = [
@@ -9,22 +11,22 @@ const availableReactions = [
 ];
 
 // Helper function to safely create text node
-function createSafeTextNode(text) {
+function createSafeTextNode(text :string) {
     return document.createTextNode(text);
 }
 
 // Helper function to safely create emoji element
-function createEmojiElement(emoji, count) {
+function createEmojiElement(emoji:string, count:number) {
     const span = document.createElement('span');
     span.appendChild(createSafeTextNode(emoji));
-    span.appendChild(createSafeTextNode(' ' + count));
+    span.appendChild(createSafeTextNode(` ${count}`));
     return span;
 }
 
 /**
  * Initialize the reactions system
  */
-function setupReactions() {
+export function setupReactions() {
     console.log('[WWSNB] Initializing message reactions module');
 
     // Configure mutation observer
@@ -39,13 +41,13 @@ function setupReactions() {
     const messagesObserver = new MutationObserver((mutations) => {
         let shouldCheckMessages = false;
 
-        mutations.forEach((mutation) => {
+        for (const mutation of mutations) {
             if (mutation.type === 'childList' ||
                 mutation.type === 'characterData' ||
                 (mutation.type === 'attributes' && mutation.attributeName === 'style')) {
                 shouldCheckMessages = true;
             }
-        });
+        }
 
         if (shouldCheckMessages) {
             setTimeout(checkAndAddReactionButtons, 100);
@@ -70,10 +72,8 @@ function setupReactions() {
     }
 
     // Observe body for structure changes
-    messagesObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+    messagesObserver.observe(document.body, config);
+    
 
     // Set up periodic check for new messages
     setInterval(checkAndAddReactionButtons, 1000);
@@ -90,11 +90,12 @@ function setupReactions() {
  */
 function checkAndAddReactionButtons() {
     const containers = document.querySelectorAll('.sc-leYdVB');
-    containers.forEach(messageContainer => {
-        if (!messageContainer.dataset.hasReactions) {
-            addReactionButton(messageContainer);
+    for (const messageContainer of containers) {
+        const container = messageContainer as HTMLElement;
+        if (!container.dataset.hasReactions) {
+            addReactionButton(container);
         }
-    });
+    }
 }
 
 /**
@@ -102,7 +103,7 @@ function checkAndAddReactionButtons() {
  * @param {HTMLElement} messageContainer The message container element
  * @returns {string} A unique message ID
  */
-function generateMessageId(messageContainer) {
+function generateMessageId(messageContainer: HTMLElement) {
     // Get message text
     const messageText = messageContainer.querySelector('[data-test="chatUserMessageText"]')?.textContent || '';
 
@@ -138,7 +139,7 @@ function getSessionToken() {
  * Initialize reactions system for current session
  * @param {string} sessionToken Current session token
  */
-function initializeReactions(sessionToken) {
+function initializeReactions(sessionToken:string) {
     const channelId = `wwsnb_reactions_${sessionToken}`;
 
     if (reactionChannel) {
@@ -155,12 +156,12 @@ function initializeReactions(sessionToken) {
  * Handle reaction updates from broadcast channel
  * @param {MessageEvent} event Broadcast channel message event
  */
-function handleReactionUpdate(event) {
+function handleReactionUpdate(event:MessageEvent) {
     if (event.data.type === 'update_reactions') {
         try {
-            const parsedReactions = JSON.parse(event.data.reactions);
+            const parsedReactions: [string, any][] = JSON.parse(event.data.reactions);
             messageReactions = new Map(
-                Array.from(parsedReactions).map(([key, value]) => [
+                parsedReactions.map(([key, value]) => [
                     key,
                     new Map(Object.entries(value))
                 ])
@@ -195,10 +196,10 @@ function saveReactionsToStorage() {
         messageReactions = cleanedReactions;
 
         // Convert and save
-        const reactionsObj = {};
-        messageReactions.forEach((reactions, messageId) => {
+        const reactionsObj: { [key: string]: Record<string, string[]> } = {};
+        for (const [messageId, reactions] of messageReactions) {
             reactionsObj[messageId] = Object.fromEntries(reactions);
-        });
+        }
 
         const storageKey = `wwsnb_reactions_${sessionToken}`;
         localStorage.setItem(storageKey, JSON.stringify(reactionsObj));
@@ -219,7 +220,7 @@ function saveReactionsToStorage() {
  * Load reactions from localStorage
  * @param {string} sessionToken Current session token
  */
-function loadReactionsFromStorage(sessionToken) {
+function loadReactionsFromStorage(sessionToken:string) {
     try {
         const storageKey = `wwsnb_reactions_${sessionToken}`;
         const saved = localStorage.getItem(storageKey);
@@ -228,13 +229,13 @@ function loadReactionsFromStorage(sessionToken) {
             const reactionsObj = JSON.parse(saved);
             messageReactions = new Map();
 
-            Object.entries(reactionsObj).forEach(([messageId, reactions]) => {
-                const messageReactionMap = new Map();
-                Object.entries(reactions).forEach(([emoji, users]) => {
+            for (const [messageId, reactions] of Object.entries(reactionsObj)) {
+                const messageReactionMap = new Map<string, string[]>();
+                for (const [emoji, users] of Object.entries(reactions as { [key: string]: string[] })) {
                     messageReactionMap.set(emoji, Array.isArray(users) ? users : []);
-                });
+                }
                 messageReactions.set(messageId, messageReactionMap);
-            });
+            };
         } else {
             messageReactions = new Map();
         }
@@ -252,22 +253,23 @@ function loadReactionsFromStorage(sessionToken) {
 function updateAllReactionDisplays() {
     const containers = document.querySelectorAll('.sc-leYdVB');
 
-    containers.forEach(messageContainer => {
-        const messageId = messageContainer.dataset.messageId || generateMessageId(messageContainer);
-        messageContainer.dataset.messageId = messageId;
-
+    for (const messageContainer of containers) {
+        const container = messageContainer as HTMLElement;
+        const messageId = container.dataset.messageId || generateMessageId(container);
+        container.dataset.messageId = messageId;
+    
         if (messageReactions.has(messageId)) {
-            let reactionsContainer = messageContainer.querySelector('.reactions-container');
+            const reactionsContainer = container.querySelector('.reactions-container');
             if (!reactionsContainer) {
-                reactionsContainer = document.createElement('div');
-                reactionsContainer.className = 'reactions-container';
-                messageContainer.appendChild(reactionsContainer);
+                const newReactionsContainer = document.createElement('div');
+                newReactionsContainer.className = 'reactions-container';
+                container.appendChild(newReactionsContainer);
             }
-
+    
             updateReactionDisplay(messageId, reactionsContainer);
-            messageContainer.dataset.hasReactions = 'true';
+            container.dataset.hasReactions = 'true';
         }
-    });
+    }
 }
 
 /**
@@ -275,12 +277,12 @@ function updateAllReactionDisplays() {
  * @param {string} messageId Message ID
  * @param {string} emoji Reaction emoji
  */
-function addReaction(messageId, emoji) {
+function addReaction(messageId:string, emoji:string) {
     const reactions = messageReactions.get(messageId) || new Map();
     const userName = getActualUserName();
 
     if (reactions.has(emoji) && reactions.get(emoji).includes(userName)) {
-        const users = reactions.get(emoji).filter(user => user !== userName);
+        const users = reactions.get(emoji).filter((user:string) => user !== userName);
         if (users.length === 0) {
             reactions.delete(emoji);
         } else {
@@ -296,9 +298,9 @@ function addReaction(messageId, emoji) {
     messageReactions.set(messageId, reactions);
 
     // Immediately update the display for this specific message
-    const messageContainer = document.querySelector(`[data-message-id="${messageId}"]`);
+    const messageContainer = document.querySelector(`[data-message-id="${messageId}"]`) as HTMLElement;
     if (messageContainer) {
-        const reactionsContainer = messageContainer.querySelector('.reactions-container');
+        const reactionsContainer = messageContainer.querySelector('.reactions-container') as HTMLElement ;
         if (reactionsContainer) {
             updateReactionDisplay(messageId, reactionsContainer);
         }
@@ -313,16 +315,16 @@ function addReaction(messageId, emoji) {
  * @param {string} messageId Message ID
  * @param {HTMLElement} container Reactions container element
  */
-function updateReactionDisplay(messageId, container) {
+function updateReactionDisplay(messageId:string, container:HTMLElement) {
     // Clear existing content safely
     while (container.firstChild) {
         container.removeChild(container.firstChild);
     }
 
     const reactions = messageReactions.get(messageId) || new Map();
-    const userName = getActualUserName();
+    const userName = getActualUserName() as string;
 
-    reactions.forEach((users, emoji) => {
+    reactions.forEach((users:string[], emoji:string) => {
         const badge = document.createElement('div');
         badge.className = 'reaction-badge';
 
@@ -342,7 +344,7 @@ function updateReactionDisplay(messageId, container) {
  * Add reaction button to a message container
  * @param {HTMLElement} messageContainer The message container element
  */
-function addReactionButton(messageContainer) {
+function addReactionButton(messageContainer: HTMLElement) {
     if (messageContainer.dataset.hasReactions === 'true') {
         return;
     }
@@ -387,9 +389,9 @@ function addReactionButton(messageContainer) {
 /**
  * Show reaction picker menu
  * @param {string} messageId The ID of the message
- * @param {HTMLElement} buttonElement The button that triggered the picker
+ * @param {HTMLButtonElement} buttonElement The button that triggered the picker
  */
-function showReactionPicker(messageId, buttonElement) {
+function showReactionPicker(messageId:string, buttonElement: HTMLButtonElement) {
     // Remove any existing picker
     const existingPicker = document.querySelector('.reaction-picker');
     if (existingPicker) {
@@ -401,7 +403,7 @@ function showReactionPicker(messageId, buttonElement) {
     picker.className = 'reaction-picker';
 
     // Add available reactions
-    availableReactions.forEach(emoji => {
+    for (const emoji of availableReactions) {
         const button = document.createElement('button');
         button.appendChild(createSafeTextNode(emoji));
         button.addEventListener('click', () => {
@@ -409,7 +411,7 @@ function showReactionPicker(messageId, buttonElement) {
             picker.remove();
         });
         picker.appendChild(button);
-    });
+    }
 
     // Position picker relative to button
     const rect = buttonElement.getBoundingClientRect();

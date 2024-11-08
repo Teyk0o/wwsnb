@@ -6,11 +6,11 @@ function setupQuestions() {
 
     // Create observer for new messages
     const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
+        for (const mutation of mutations) {
             if (mutation.addedNodes.length) {
                 checkNewMessages();
             }
-        });
+        }
     });
 
     // Start observing document for changes
@@ -27,9 +27,9 @@ function checkNewMessages() {
     // Get all messages using data-test attribute
     const messages = document.querySelectorAll('[data-test="chatUserMessageText"]');
 
-    messages.forEach(message => {
+    for (const message of messages) {
         // Check for @question tag
-        if (message.textContent.includes('@question')) {
+        if (message.textContent?.includes('@question')) {
             const messageContainer = message.closest('.sc-leYdVB');
 
             // Add highlight class if not already present
@@ -37,7 +37,7 @@ function checkNewMessages() {
                 messageContainer.classList.add('question-highlight');
             }
         }
-    });
+    }
 }
 
 // Initialize module

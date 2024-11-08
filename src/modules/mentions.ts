@@ -1,42 +1,25 @@
+import { getCachedUsers } from "../utils";
+
 // Global variables for mentions system
-let suggestionsBox = null;
-let currentInput = null;
-let cachedUsers = null;
-let lastCacheTime = 0;
-const CACHE_DURATION = 3000;
+// let suggestionsBox: HTMLDivElement | null = null;
+let currentInput: HTMLElement | null = null;
 
-// Global click handler to close suggestions box when clicking outside
-document.addEventListener('click', (e) => {
-    if (suggestionsBox) {
-        const isClickInside = suggestionsBox.contains(e.target) || e.target.id === 'message-input';
-        if (!isClickInside) {
-            hideSuggestions();
-        }
-    }
-});
+// // Global click handler to close suggestions box when clicking outside
+// document.addEventListener('click', (e) => {
+//     if (suggestionsBox) {
+//         const isClickInside = suggestionsBox.contains(e.target) || e.target.id === 'message-input';
+//         if (!isClickInside) {
+//             hideSuggestions();
+//         }
+//     }
+// });
 
-/**
- * Initialize the mentions system by setting up event listeners
- */
-function setupMentions() {
-    console.log('[WWSNB] Initializing user mentions module');
 
-    // Remove any existing event listeners to prevent duplicates
-    document.removeEventListener('input', handleInput);
-    document.removeEventListener('keydown', handleKeyDownGlobal);
-
-    // Add event listeners for handling mentions
-    document.addEventListener('input', handleInput);
-    document.addEventListener('keydown', handleKeyDownGlobal, true);
-    document.addEventListener('click', handleGlobalClick, true);
-
-    setupInputListener();
-}
 
 /**
  * Set up the input field listener and handle form submission
  */
-function setupInputListener() {
+export function setupInputListener() {
     const chatInput = document.getElementById('message-input');
     currentInput = chatInput;
 
@@ -45,18 +28,17 @@ function setupInputListener() {
 
         // Prevent form submission when suggestions are open
         const form = chatInput.closest('form');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                if (suggestionsBox) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                }
-            }, true);
-        }
+        form?.addEventListener('submit', (e) => {
+            if (suggestionsBox) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, true);
+
 
         // Handle send button clicks
-        const sendButton = document.querySelector('[data-test="sendMessageButton"]');
+        const sendButton = document.querySelector('[data-test="sendMessageButton"]') as HTMLButtonElement;
         if (sendButton) {
             const originalClickHandler = sendButton.onclick;
             sendButton.onclick = (e) => {
@@ -65,114 +47,12 @@ function setupInputListener() {
                     e.stopPropagation();
                     return false;
                 }
-                if (originalClickHandler) {
-                    return originalClickHandler.call(sendButton, e);
-                }
+                originalClickHandler?.call(sendButton, e)
             };
         }
     }
 }
 
-/**
- * Get cached users or fetch new ones if cache is expired
- * @returns {Promise<Array>} Array of users
- */
-async function getCachedUsers() {
-    const now = Date.now();
-    if (cachedUsers == null || now - lastCacheTime > CACHE_DURATION) {
-        console.log('Fetching users...');
-        cachedUsers = await getAllUsers();
-        console.log('Users fetched:', cachedUsers);
-        lastCacheTime = now;
-    }
-    return cachedUsers;
-}
-
-/**
- * Handle click events on suggestion items
- * @param {Event} e Click event
- */
-function handleGlobalClick(e) {
-    if (suggestionsBox) {
-        const suggestionItem = e.target.closest('.mention-suggestion-item');
-        if (suggestionItem) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            selectSuggestion(suggestionItem);
-            return false;
-        } else if (!suggestionsBox.contains(e.target) && e.target.id !== 'message-input') {
-            hideSuggestions();
-        }
-    }
-}
-
-/**
- * Handle keyboard events for navigation and selection
- * @param {KeyboardEvent} e Keyboard event
- */
-function handleKeyDownGlobal(e) {
-    if (!suggestionsBox) {
-        return;
-    }
-
-    if (e.target.id === 'message-input') {
-        if (e.key === 'Enter') {
-            const selectedItem = suggestionsBox.querySelector('.selected');
-            if (selectedItem) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                selectSuggestion(selectedItem);
-                return false;
-            }
-        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-            e.preventDefault();
-            e.stopPropagation();
-            navigateSuggestions(e.key === 'ArrowDown' ? 1 : -1);
-            return false;
-        } else if (e.key === 'Escape') {
-            e.preventDefault();
-            e.stopPropagation();
-            hideSuggestions();
-            return false;
-        }
-    }
-}
-
-/**
- * Handle input changes and trigger suggestions display
- * @param {Event} e Input event
- */
-function handleInput(e) {
-    if (e.target.id !== 'message-input') {
-        return;
-    }
-
-    const text = e.target.value;
-    const cursorPosition = e.target.selectionStart;
-    const textUpToCursor = text.slice(0, cursorPosition);
-    const lastAtIndex = textUpToCursor.lastIndexOf('@');
-
-    if (lastAtIndex === -1) {
-        hideSuggestions();
-        return;
-    }
-
-    const textAfterAt = textUpToCursor.slice(lastAtIndex + 1);
-    if (textAfterAt.includes(' ')) {
-        hideSuggestions();
-        return;
-    }
-
-    // Show all suggestions if just after @
-    if (lastAtIndex === cursorPosition - 1) {
-        searchAndShowSuggestions('', e.target, lastAtIndex);
-        return;
-    }
-
-    searchAndShowSuggestions(textAfterAt, e.target, lastAtIndex);
-}
 
 /**
  * Search users and display suggestions
@@ -180,9 +60,9 @@ function handleInput(e) {
  * @param {HTMLElement} inputElement Input element
  * @param {number} atIndex Position of @
  */
-async function searchAndShowSuggestions(query, inputElement, atIndex) {
+export function searchAndShowSuggestions(query:string, inputElement:HTMLInputElement, atIndex:number) {
     try {
-        const users = await getCachedUsers();
+        const users = getCachedUsers();
         const matches = users.filter(user =>
             user.name.toLowerCase().startsWith(query.toLowerCase())
         );
@@ -207,7 +87,7 @@ async function searchAndShowSuggestions(query, inputElement, atIndex) {
 function showSuggestions(users, inputElement, atIndex) {
     hideSuggestions();
 
-    suggestionsBox = document.createElement('div');
+    const suggestionsBox = document.createElement('div');
     suggestionsBox.className = 'mention-suggestions';
 
     users.forEach((user, index) => {
@@ -268,7 +148,7 @@ function showSuggestions(users, inputElement, atIndex) {
 /**
  * Hide suggestions box
  */
-function hideSuggestions() {
+export function hideSuggestions() {
     if (suggestionsBox) {
         suggestionsBox.remove();
         suggestionsBox = null;
@@ -300,10 +180,8 @@ function navigateSuggestions(direction) {
  * Select a suggestion and insert it into the input
  * @param {HTMLElement} item Selected suggestion item
  */
-function selectSuggestion(item) {
-    if (!currentInput || !item) {
-        return;
-    }
+export function selectSuggestion(item:HTMLElement) {
+    if (!currentInput || !item) return;
 
     const text = currentInput.value;
     const cursorPos = currentInput.selectionStart;
