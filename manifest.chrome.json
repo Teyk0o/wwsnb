@@ -2,16 +2,30 @@
   "manifest_version": 3,
   "name": "Flowly",
   "author": "Théo Vilain / Teyk0o",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Where every word matters",
   "host_permissions": [
     "*://*.oclock.school/*",
     "https://api.theovilain.com/*"
   ],
+  "permissions": [
+    "storage"
+  ],
   "icons": {
-    "48": "icons/flowly-48.png",
-    "96": "icons/flowly-96.png"
+    "48": "flowly-48.png",
+    "96": "flowly-96.png"
   },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "flowly-48.png",
+      "96": "flowly-96.png"
+    }
+  },
+  "web_accessible_resources": [{
+    "resources": ["settings.html"],
+    "matches": ["<all_urls>"]
+  }],
   "content_scripts": [
     {
       "matches": [

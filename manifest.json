@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Flowly",
   "author": "Théo Vilain / Teyk0o",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "license": "All Rights Reserved",
   "description": "Where every word matters",
   "browser_specific_settings": {

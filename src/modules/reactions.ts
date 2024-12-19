@@ -27,10 +27,7 @@ class ReactionManager {
     };
 
     // Liste des réactions disponibles
-    private readonly availableReactions: AvailableReaction[] = [
-        '👍', '❤️', '😂', '😮', '😢', '😡',
-        '🎉', '🤔', '👀', '🔥', '✨', '👎'
-    ];
+    private availableReactions: string[] = [];
 
     private constructor() {
         this.setup();
@@ -47,8 +44,16 @@ class ReactionManager {
      * Initialise le gestionnaire de réactions
      * Configure les observations DOM et s'abonne aux mises à jour WebSocket
      */
-    public setup(): void {
+    public async setup(): Promise<void> {
         console.log('[Flowly] Initializing message reactions module');
+
+        await this.updateAvailableReactions();
+
+        browser.storage.onChanged.addListener((changes) => {
+            if (changes.customEmojis) {
+                this.updateAvailableReactions();
+            }
+        });
 
         this.initializeMessageIds();
         this.setupObserver();
@@ -94,6 +99,22 @@ class ReactionManager {
             childList: true,
             subtree: true
         });
+    }
+
+    public async updateAvailableReactions(): Promise<void> {
+        try {
+            const { customEmojis } = await browser.storage.sync.get('customEmojis');
+            this.availableReactions = customEmojis || [
+                '👍', '❤️', '😂', '😮', '😢', '😡',
+                '🎉', '🤔', '👀', '🔥', '✨', '👎'
+            ];
+        } catch (error) {
+            console.error('[Flowly] Error loading custom reactions:', error);
+            this.availableReactions = [
+                '👍', '❤️', '😂', '😮', '😢', '😡',
+                '🎉', '🤔', '👀', '🔥', '✨', '👎'
+            ];
+        }
     }
 
     private handleMutations(mutations: MutationRecord[]): void {

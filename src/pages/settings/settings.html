@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="flowly-48.png">
+    <title>Flowly Settings</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --red-600: #dc2626;
+            --red-700: #b91c1c;
+            --max-width: 800px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.5;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .nav-content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-content img {
+            height: 32px;
+            width: auto;
+        }
+
+        .nav-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .link-card {
+            padding: 1rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        .link-card:visited {
+            color: inherit;
+        }
+
+        .link-card:focus {
+            outline: none;
+        }
+
+        .link-card:active {
+            color: inherit;
+        }
+
+        .link-card:hover {
+            text-decoration: none;
+            color: inherit;
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .emoji-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            padding: 0.35rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background: white;
+        }
+
+        .emoji-item:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+        }
+
+        .selected-emoji {
+            border-color: var(--primary);
+            background: var(--gray-50);
+            transform: scale(1.05);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-800);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+        }
+
+        .toast.visible {
+            opacity: 1;
+        }
+
+        .picker-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .picker-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            max-width: 95vw;
+            max-height: 95vh;
+            width: 340px;
+            overflow: hidden;
+        }
+
+        emoji-picker {
+            width: 100% !important;
+            height: 400px !important;
+            border: none !important;
+        }
+
+        @media (max-width: 640px) {
+            .nav-title {
+                font-size: 1rem;
+            }
+
+            .container {
+                margin: 1rem auto;
+            }
+
+            .emoji-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-content">
+        <img src="flowly-48.png" alt="Flowly">
+        <span class="nav-title">Paramètres Flowly</span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Liens utiles</h2>
+        </div>
+        <div class="card-body">
+            <div class="links-grid">
+                <a href="https://discord.gg/Q5D2xRpSTN" target="_blank" class="link-card">
+                    <img src="discord.png" alt="Discord" width="24" height="24">
+                    <span>Rejoindre le Discord</span>
+                </a>
+                <a href="https://buymeacoffee.com/flowlyweb" target="_blank" class="link-card">
+                    <img src="buy-me-a-coffee.png" alt="coffeeLink" width="24" height="24">
+                    <span>Achetez-nous un café !</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                Réactions personnalisées
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="emoji-grid" id="emojiList">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="picker-overlay" id="pickerOverlay">
+    <div class="picker-container">
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="settings.js"></script>
+</body>
+</html>

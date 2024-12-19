@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import CopyPlugin from 'copy-webpack-plugin';
-import webpack from 'webpack';
+import HtmlWebpackPlugin from "html-webpack-plugin";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,7 +30,9 @@ function createBrowserConfig(target) {
         name: target,
         target: 'web',
         entry: {
-            content: './src/content.ts'
+            content: './src/content.ts',
+            popup: './src/pages/popup/popup.ts',
+            settings: './src/pages/settings/settings.ts'
         },
         output: {
             filename: '[name].js',
@@ -47,14 +49,24 @@ function createBrowserConfig(target) {
                         to: "."
                     },
                     {
-                        from: "icons",
-                        to: "icons"
+                        from: "src/assets",
+                        to: "."
                     },
                     {
                         from: `manifest.${target}.json`,
                         to: "manifest.json"
                     }
                 ],
+            }),
+            new HtmlWebpackPlugin({
+                template: './src/pages/popup/popup.html',
+                filename: 'popup.html',
+                chunks: ['popup']
+            }),
+            new HtmlWebpackPlugin({
+                template: './src/pages/settings/settings.html',
+                filename: 'settings.html',
+                chunks: ['settings']
             })
         ],
         devtool: 'source-map'

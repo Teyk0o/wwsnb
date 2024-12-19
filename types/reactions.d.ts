@@ -1,8 +1,14 @@
+export interface ReactionValidation {
+    readonly defaultReactions: string[];
+    userCustomReactions: Map<string, string[]>;
+}
+
 export interface ReactionConfig {
     maxReconnectAttempts: number;
     reconnectDelay: number;
     checkInterval: number;
     wsUrl: string;
+    validReactions: ReactionValidation;
 }
 
 export interface BaseWebSocketMessage<T extends string, D = unknown> {
@@ -33,7 +39,7 @@ export interface ParsedMessageReaction {
     reactions: ParsedReactionData[];
 }
 
-export type AvailableReaction = '👍' | '❤️' | '😂' | '😮' | '😢' | '😡' | '🎉' | '🤔' | '👀' | '🔥' | '✨' | '👎';
+export type AvailableReaction = string;
 
 export interface ReactionElements {
     reactionsWrapper: HTMLElement;
@@ -63,3 +69,5 @@ export interface ReactionManagerConfig {
 }
 
 export type QueuedMessage = WebSocketMessage;
+
+export function isValidReaction(emoji: string, config: ReactionConfig): boolean;
